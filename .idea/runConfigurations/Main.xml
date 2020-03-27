@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="KAMI" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <kind value="FILE" />
+    <filePath value="$PROJECT_DIR$/main.go" />
+    <directory value="$PROJECT_DIR$/" />
+    <method v="2">
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_Go-Bindata" />
+    </method>
+  </configuration>
+</component>

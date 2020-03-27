@@ -1,9 +1,10 @@
 # idea
-.idea/
+.idea/*.*
+.idea/runConfigurations/*.*
+
+# need this for now
+!.idea/runConfigurations/Main.xml
 
 # this file is auto-generated on launch
 resources/assets.go
-
-
-
 
