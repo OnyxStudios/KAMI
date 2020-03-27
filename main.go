@@ -43,7 +43,7 @@ func main() {
 	glfw.WindowHint(glfw.GreenBits, videoMode.GreenBits)
 	glfw.WindowHint(glfw.BlueBits, videoMode.BlueBits)
 	glfw.WindowHint(glfw.RefreshRate, videoMode.RefreshRate)
-	window, err := glfw.CreateWindow(videoMode.Width, videoMode.Height, fmt.Sprintf("%v %v", constants.Title, constants.Version), nil, nil)
+	window, err := glfw.CreateWindow(constants.WindowWidth, constants.WindowHeight, fmt.Sprintf("%v %v", constants.Title, constants.Version), nil, nil)
 	util.FCheckErr(err, "could not create OpenGL window: %v")
 	window.MakeContextCurrent() //create openGL context
 	glfw.SwapInterval(1)
