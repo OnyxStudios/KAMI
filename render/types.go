@@ -1,11 +1,5 @@
 package render
 
-//a shader program that connects a vertex and fragment shader
-type ShaderProgram struct {
-	Handle   uint32
-	Location string
-}
-
 //simple VBO to keep our data
 type VertexBufferObject struct {
 	Handle   uint32

@@ -24,7 +24,7 @@ func LoadVBO(vbo *VertexBufferObject) {
 func InitGL() {
 	if !isGlInit {
 		util.CheckErr(gl.Init())
-		fmt.Printf("OpenGL Version %v\n", gl.GoStr(gl.GetString(gl.VERSION)))
+		util.Log.Println(fmt.Sprintf("OpenGL Version %v", gl.GoStr(gl.GetString(gl.VERSION))))
 		isGlInit = true
 	}
 }
@@ -59,9 +59,9 @@ func LoadProgram(program *ShaderProgram) {
 	if success == gl.FALSE {
 		log := gl.Str(strings.Repeat("\x00", logSize))
 		gl.GetProgramInfoLog(program.Handle, logSize, nil, log)
-		panic(fmt.Errorf("shader program link error: %v", gl.GoStr(log)))
+		util.ErrLog.Panicln(fmt.Errorf("shader program link error: %v", gl.GoStr(log)))
 	}
-	gl.UseProgram(program.Handle)
+	program.UseShader()
 
 	//cleanup
 	gl.DeleteShader(hVSH)
@@ -81,7 +81,7 @@ func LoadShader(location string, xtype uint32) uint32 {
 	if success == gl.FALSE {
 		log := gl.Str(strings.Repeat("\x00", logSize))
 		gl.GetShaderInfoLog(handle, logSize, nil, log)
-		panic(fmt.Errorf("shader compile error: %v", gl.GoStr(log)))
+		util.ErrLog.Panicln(fmt.Errorf("shader compile error: %v", gl.GoStr(log)))
 	}
 	return handle
 }

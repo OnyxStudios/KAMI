@@ -1,15 +1,17 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func CheckErr(e error)  {
+func CheckErr(e error) {
 	if e != nil {
-		panic(e)
+		ErrLog.Fatalln(e)
 	}
 }
 
 func FCheckErr(e error, format string) {
 	if e != nil {
-		panic(fmt.Errorf(format, e))
+		ErrLog.Fatalln(fmt.Errorf(format, e))
 	}
 }
