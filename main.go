@@ -89,12 +89,12 @@ func main() {
 	glfw.WindowHint(glfw.BlueBits, videoMode.BlueBits)
 	glfw.WindowHint(glfw.RefreshRate, videoMode.RefreshRate)
 	window, err := glfw.CreateWindow(constants.WindowWidth, constants.WindowHeight, fmt.Sprintf("%v %v", constants.Title, constants.Version), nil, nil)
+	util.FCheckErr(err, "could not create OpenGL window: %v")
 	window.SetMaximizeCallback(func(window *glfw.Window, iconified bool) {
 		width, height := window.GetSize()
 		projectionMatrix = mgl64.Perspective(100, float64(width/height), 0.1, 1000)
 		loadProjectionMatrix()
 	})
-	util.FCheckErr(err, "could not create OpenGL window: %v")
 	window.MakeContextCurrent() //create openGL context
 	glfw.SwapInterval(1)
 	render.InitGL()
@@ -103,7 +103,7 @@ func main() {
 	width, height := window.GetSize()
 	projectionMatrix = mgl64.Perspective(100, float64(width/height), 0.1, 1000)
 	loadProjectionMatrix()
-	camera = render.Camera{mgl64.Vec3{0, 0, 0}, mgl64.AnglesToQuat(0, 0, 0, mgl64.XYZ)}
+	camera = render.Camera{Position: mgl64.Vec3{0, 0, 0}, Rotation: mgl64.AnglesToQuat(0, 0, 0, mgl64.XYZ)}
 
 	gl.BindAttribLocation(render.DefaultShaderProgram.Handle, 0, gl.Str("position\x00"))
 	gl.BindAttribLocation(render.DefaultShaderProgram.Handle, 1, gl.Str("textureCoords\x00"))
