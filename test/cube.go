@@ -21,16 +21,6 @@ func BindIndices(size int, data []int32) {
 }
 
 //TODO move to designated file
-func StoreDataInAttribs(attribute uint32, coordSize int32, size int, data []float32, offset int) {
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, size, gl.Ptr(data), gl.STATIC_DRAW)
-	gl.VertexAttribPointer(attribute, coordSize, gl.FLOAT, false, 0, gl.PtrOffset(offset))
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-}
-
-//TODO move to designated file
 func loadTexture(fileName string) uint32 {
 	data := util.ReadAsset(fileName)
 	img, _, err := image.Decode(bytes.NewReader(data))
@@ -61,7 +51,8 @@ func loadTexture(fileName string) uint32 {
 func LoadProjectionMatrix(shader *render.ShaderProgram) {
 	shader.UseShader()
 	matrixID := shader.CreateUniformLocation("projectionMatrix")
-	gl.UniformMatrix4dv(matrixID, 1, false, &render.MainCamera.Projection[0])
+	gl.UniformMatrix4fv(matrixID, 1, false, &render.MainCamera.Projection[0]) //FIXME this line does error out
+	render.CheckGlError()
 	//cleanup
 	gl.UseProgram(0)
 }

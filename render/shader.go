@@ -23,12 +23,13 @@ func (shader *ShaderProgram) UseShader() {
 	gl.UseProgram(shader.Handle)
 }
 
-func (shader *ShaderProgram) BindAttribLocation(index uint32, location string) {
+func (shader *ShaderProgram) SetAttribLocation(index uint32, location string) {
 	if !strings.HasSuffix(location, "\x00") {
 		location += "\x00"
 	}
 	shader.attributes = append(shader.attributes, location)
 	gl.BindAttribLocation(shader.Handle, index, gl.Str(location))
+	CheckGlError()
 }
 
 func (shader *ShaderProgram) CreateUniformLocation(uniform string) int32 {
@@ -36,5 +37,7 @@ func (shader *ShaderProgram) CreateUniformLocation(uniform string) int32 {
 		uniform += "\x00"
 	}
 	shader.uniforms = append(shader.uniforms, uniform)
-	return gl.GetUniformLocation(shader.Handle, gl.Str(uniform))
+	location := gl.GetUniformLocation(shader.Handle, gl.Str(uniform))
+	CheckGlError()
+	return location
 }

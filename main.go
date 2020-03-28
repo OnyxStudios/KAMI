@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/go-gl/mathgl/mgl64"
+	"github.com/go-gl/mathgl/mgl32"
 	"kami/constants"
 	"kami/render"
 	"kami/test"
@@ -82,18 +82,18 @@ func main() {
 	render.InitGL()
 	window.SetMaximizeCallback(func(window *glfw.Window, iconified bool) {
 		width, height := window.GetSize()
-		render.MainCamera.Projection = mgl64.Perspective(mgl64.DegToRad(45.0), float64(width/height), 0.1, 1000)
+		render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
 		test.LoadProjectionMatrix(&render.DefaultShaderProgram)
 	})
 
 	//TODO load resources here
 	width, height := window.GetSize()
 	render.LoadShaders()
-	render.MainCamera.Projection = mgl64.Perspective(mgl64.DegToRad(45.0), float64(width/height), 0.1, 1000)
+	render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
 	test.LoadProjectionMatrix(&render.DefaultShaderProgram)
-	render.DefaultShaderProgram.BindAttribLocation(0, "position")
-	render.DefaultShaderProgram.BindAttribLocation(1, "textureCoords")
-	render.DefaultShaderProgram.BindAttribLocation(2, "normal")
+	render.DefaultShaderProgram.SetAttribLocation(0, "position")
+	render.DefaultShaderProgram.SetAttribLocation(1, "textureCoords")
+	render.DefaultShaderProgram.SetAttribLocation(2, "normal")
 	transformationMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("transformationMatrix")
 	viewMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("viewMatrix")
 	lightPositionUniform := render.DefaultShaderProgram.CreateUniformLocation("lightPosition")
@@ -102,10 +102,16 @@ func main() {
 
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
+	cubeVAO := render.VertexArrayObject{BufferCount:3}
+	render.LoadVAO(&cubeVAO)
+	cubeVAO.Bind()
+	cubeVAO.AddAttribData(0, 3, cubeVertices, 0, 0)
+	cubeVAO.AddAttribData(1, 2, cubeTextureCoords, 0, 0)
+	cubeVAO.AddAttribData(2, 3, cubeNormals, 0, 0)
+	gl.BindVertexArray(0)
+
 	for !window.ShouldClose() {
-		for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
-			util.ErrLog.Println(fmt.Sprintf("OpenGL ERROR: %v", err))
-		}
+		render.CheckGlError()
 
 		//TODO process keybinds
 		if window.GetAttrib(glfw.Focused) == glfw.True {
@@ -120,27 +126,18 @@ func main() {
 			gl.Uniform3f(lightPositionUniform, 0, 10, 0)
 			gl.Uniform3f(lightColorUniform, 1, 1, 1)
 			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
-			gl.UniformMatrix4dv(viewMatrixUniform, 1, false, &viewMatrix[0])
+			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
+			cubeVAO.Bind()
 
-			var vao uint32 //TODO replace with render.MakeVAO()
-			gl.GenVertexArrays(1, &vao)
-			gl.BindVertexArray(vao)
-
-			test.BindIndices(36, cubeIndices)
-			test.StoreDataInAttribs(0, 3, len(cubeVertices), cubeVertices, 0)
-			test.StoreDataInAttribs(1, 2, len(cubeTextureCoords), cubeTextureCoords, 0)
-			test.StoreDataInAttribs(2, 3, len(cubeNormals), cubeNormals, 0)
-			gl.EnableVertexAttribArray(0)
-			gl.EnableVertexAttribArray(1)
-			gl.EnableVertexAttribArray(2)
+			//test.BindIndices(36, cubeIndices)
 
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_2D, test.CubeTexture)
 
-			//transformMatrix := render.CreateTransformMatrix(mgl64.Vec3{0, 0, -1}, mgl64.AnglesToQuat(0, 0, 0, mgl64.XYZ), 1)
-			modelMatrix := mgl64.Ident4()
+			//transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -1}, mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ), 1)
+			modelMatrix := mgl32.Ident4()
 
-			gl.UniformMatrix4dv(transformationMatrixUniform, 1, false, &modelMatrix[0])
+			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &modelMatrix[0])
 			gl.DrawElements(gl.TRIANGLES, 36, gl.UNSIGNED_INT, gl.Ptr(cubeIndices))
 
 			window.SwapBuffers()

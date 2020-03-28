@@ -31,19 +31,11 @@ func InitGL() {
 
 func LoadVAO(vao *VertexArrayObject) {
 	InitGL()
-	if vao.VBO.Handle == 0 {
-		LoadVBO(&vao.VBO)
+	if vao.BufferCount <= 0 {
+		util.ErrLog.Panicln("tried to create empty VAO!")
 	}
-	gl.GenVertexArrays(1, &vao.Handle)
-	gl.BindVertexArray(vao.Handle)
-	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vao.VBO.Handle)
-	//tell opengl how to interpret the vbo data
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
-
-	//cleanup
-	gl.BindVertexArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	vao.VertexBuffers = make([]VertexBufferObject, vao.BufferCount)
+	gl.GenVertexArrays(vao.BufferCount, &vao.Handle)
 }
 
 func LoadProgram(program *ShaderProgram) {
@@ -84,4 +76,10 @@ func LoadShader(location string, xtype uint32) uint32 {
 		util.ErrLog.Panicln(fmt.Errorf("shader compile error: %v", gl.GoStr(log)))
 	}
 	return handle
+}
+
+func CheckGlError() {
+	for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
+		util.ErrLog.Println(fmt.Sprintf("OpenGL ERROR: %v", err))
+	}
 }
