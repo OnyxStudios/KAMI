@@ -13,38 +13,57 @@ import (
 )
 
 var cubeVertices = []float32{
-	-1, -1, -1,
-	1, -1, -1,
 	1, 1, -1,
-	-1, -1, 1,
-	1, -1, 1,
+	1, -1, -1,
 	1, 1, 1,
+	1, -1, 1,
+	-1, 1, -1,
+	-1, -1, -1,
 	-1, 1, 1,
+	-1, -1, 1,
 }
 
 var cubeTextureCoords = []float32{
 	0, 0,
 	1, 0,
 	1, 1,
+	1, 1,
+	0, 0,
+	1, 0,
+	0, 1,
+	1, 0,
+	1, 1,
+	0, 1,
+	0, 0,
+	1, 0,
+	0, 0,
+	0, 0,
+	1, 1,
 	0, 1,
 }
 
 var cubeNormals = []float32{
+	0, 1, 0,
 	0, 0, 1,
+	-1, 0, 0,
+	0, -1, 0,
 	1, 0, 0,
 	0, 0, -1,
-	-1, 0, 0,
-	0, 1, 0,
-	0, -1, 0,
 }
 
 var cubeIndices = []int32{
-	0, 1, 3, 3, 1, 2,
-	1, 5, 2, 2, 5, 6,
-	5, 4, 6, 6, 4, 7,
-	4, 0, 7, 7, 0, 3,
-	3, 2, 7, 7, 2, 6,
-	4, 5, 0, 0, 5, 1,
+	4, 2, 0,
+	2, 7, 3,
+	6, 5, 7,
+	1, 7, 5,
+	0, 3, 1,
+	4, 1, 5,
+	4, 6, 2,
+	2, 6, 7,
+	6, 4, 5,
+	1, 3, 7,
+	0, 2, 3,
+	4, 0, 1,
 }
 
 func init() {
@@ -82,8 +101,11 @@ func main() {
 	render.InitGL()
 	window.SetMaximizeCallback(func(window *glfw.Window, iconified bool) {
 		width, height := window.GetSize()
+		screenWidth, screenHeight := glfw.GetPrimaryMonitor().GetPhysicalSize()
+
 		render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
 		test.LoadProjectionMatrix(&render.DefaultShaderProgram)
+		window.SetPos((width - screenWidth) / 2, (height - screenHeight) / 2)
 	})
 
 	//TODO load resources here
@@ -110,8 +132,14 @@ func main() {
 	cubeVAO.AddAttribData(2, 3, cubeNormals, 0, 0)
 	gl.BindVertexArray(0)
 
+	lastTime := glfw.GetTime()
+	angle := 0.0
 	for !window.ShouldClose() {
 		render.CheckGlError()
+		time := glfw.GetTime()
+		elapsedTime := time - lastTime
+		lastTime = time
+		angle += elapsedTime
 
 		//TODO process keybinds
 		if window.GetAttrib(glfw.Focused) == glfw.True {
@@ -129,16 +157,11 @@ func main() {
 			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
 			cubeVAO.Bind()
 
-			//test.BindIndices(36, cubeIndices)
-
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_2D, test.CubeTexture)
-
-			//transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -1}, mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ), 1)
-			modelMatrix := mgl32.Ident4()
-
-			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &modelMatrix[0])
-			gl.DrawElements(gl.TRIANGLES, 36, gl.UNSIGNED_INT, gl.Ptr(cubeIndices))
+			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, mgl32.AnglesToQuat(0, float32(angle), 0, mgl32.XYZ), 1)
+			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
+			gl.DrawElements(gl.TRIANGLES, int32(len(cubeIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeIndices))
 
 			window.SwapBuffers()
 		}
