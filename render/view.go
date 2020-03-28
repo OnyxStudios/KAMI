@@ -14,9 +14,6 @@ func CreateTransformMatrix(translation mgl32.Vec3, rotation mgl32.Quat, scale fl
 }
 
 func CreateViewMatrix(position mgl32.Vec3, rotation mgl32.Quat) mgl32.Mat4 {
-	matrix := mgl32.LookAtV(position.Mul(-1), mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
-	matrix.Mul4(mgl32.HomogRotate3DX(rotation.X()))
-	matrix.Mul4(mgl32.HomogRotate3DY(rotation.Y()))
-
+	matrix := mgl32.LookAtV(position, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
 	return matrix
 }

@@ -51,7 +51,7 @@ func loadTexture(fileName string) uint32 {
 func LoadProjectionMatrix(shader *render.ShaderProgram) {
 	shader.UseShader()
 	matrixID := shader.CreateUniformLocation("projectionMatrix")
-	gl.UniformMatrix4fv(matrixID, 1, false, &render.MainCamera.Projection[0]) //FIXME this line does error out
+	gl.UniformMatrix4fv(matrixID, 1, false, &render.MainCamera.Projection[0])
 	render.CheckGlError()
 	//cleanup
 	gl.UseProgram(0)

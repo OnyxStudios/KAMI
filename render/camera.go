@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	MainCamera = Camera{Position: mgl32.Vec3{}, Rotation: mgl32.QuatIdent()}
+	MainCamera = Camera{Position: mgl32.Vec3{3, 3, 3}, Rotation: mgl32.QuatIdent()}
 )
 
 type Camera struct {
