@@ -1,16 +1,13 @@
 package test
 
 import (
-"bytes"
-"github.com/go-gl/gl/all-core/gl"
-"image"
-"image/draw"
-"kami/render"
-"kami/util"
-)
-
-var (
-	CubeTexture = loadTexture("textures/planks.png")
+	"bytes"
+	"github.com/go-gl/gl/all-core/gl"
+	"image"
+	"image/draw"
+	"image/png"
+	"kami/render"
+	"kami/util"
 )
 
 //TODO move to designated file
@@ -21,10 +18,11 @@ func BindIndices(size int, data []int32) {
 }
 
 //TODO move to designated file
-func loadTexture(fileName string) uint32 {
+func LoadTexture(fileName string) uint32 {
 	data := util.ReadAsset(fileName)
-	img, _, err := image.Decode(bytes.NewReader(data))
+	img, err := png.Decode(bytes.NewReader(data))
 	if err != nil {
+		util.CheckErr(err)
 		return 0
 	}
 

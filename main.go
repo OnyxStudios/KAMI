@@ -24,7 +24,7 @@ var cubeVertices = []float32{
 }
 
 var cubeTextureCoords = []float32{
-	0, 0,
+	0, 1,
 	1, 0,
 	1, 1,
 	1, 1,
@@ -51,7 +51,7 @@ var cubeNormals = []float32{
 	0, 0, -1,
 }
 
-var cubeIndices = []int32{
+var cubeIndices = []uint32{
 	4, 2, 0,
 	2, 7, 3,
 	6, 5, 7,
@@ -105,13 +105,18 @@ func main() {
 
 		render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
 		test.LoadProjectionMatrix(&render.DefaultShaderProgram)
-		window.SetPos((width - screenWidth) / 2, (height - screenHeight) / 2)
+		gl.Viewport(0, 0, int32(width), int32(height))
+
+		if !iconified {
+			window.SetPos((width-screenWidth)/2, (height-screenHeight)/2)
+		}
 	})
 
 	//TODO load resources here
 	width, height := window.GetSize()
 	render.LoadShaders()
 	render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
+	gl.Viewport(0, 0, int32(width), int32(height))
 	test.LoadProjectionMatrix(&render.DefaultShaderProgram)
 	render.DefaultShaderProgram.SetAttribLocation(0, "position")
 	render.DefaultShaderProgram.SetAttribLocation(1, "textureCoords")
@@ -134,6 +139,7 @@ func main() {
 
 	lastTime := glfw.GetTime()
 	angle := 0.0
+	texture := test.LoadTexture("textures/planks.png")
 	for !window.ShouldClose() {
 		render.CheckGlError()
 		time := glfw.GetTime()
@@ -152,13 +158,13 @@ func main() {
 			render.DefaultShaderProgram.UseShader()
 			gl.Uniform3f(environmentColorUniform, 0.078, 0.078, 0.078)
 			gl.Uniform3f(lightPositionUniform, 0, 10, 0)
-			gl.Uniform3f(lightColorUniform, 1, 1, 1)
+			gl.Uniform3f(lightColorUniform, 0.69, 0.90, 1)
 			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
 			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
 			cubeVAO.Bind()
 
 			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, test.CubeTexture)
+			gl.BindTexture(gl.TEXTURE_2D, texture)
 			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, mgl32.AnglesToQuat(0, float32(angle), 0, mgl32.XYZ), 1)
 			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
 			gl.DrawElements(gl.TRIANGLES, int32(len(cubeIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeIndices))
