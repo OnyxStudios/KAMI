@@ -17,6 +17,14 @@ func init() {
 	runtime.LockOSThread()
 }
 
+var (
+	fov float32 = 45.0
+	nearPlane float32 = 0.1
+	farPlane float32 = 1000
+	mouseX, mouseY float32
+	deltaX, deltaY float32
+)
+
 func main() {
 	err := glfw.Init()
 	util.FCheckErr(err, "could not initialize glfw: %v")
@@ -44,37 +52,41 @@ func main() {
 	window.MakeContextCurrent() //create openGL context
 	glfw.SwapInterval(1)
 	render.InitGL()
+	window.SetSizeCallback(func(window *glfw.Window, width int, height int) {
+		frameWidth, frameHeight := window.GetFramebufferSize()
+		render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
+	})
 	window.SetMaximizeCallback(func(window *glfw.Window, iconified bool) {
-		width, height := window.GetSize()
-		screenWidth, screenHeight := glfw.GetPrimaryMonitor().GetPhysicalSize()
-
-		render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
-		render.LoadProjectionMatrix(&render.DefaultShaderProgram, render.MainCamera)
-		gl.Viewport(0, 0, int32(width), int32(height))
+		frameWidth, frameHeight := window.GetFramebufferSize()
 
 		if !iconified {
-			window.SetPos((width-screenWidth)/2, (height-screenHeight)/2)
+			vidMode := glfw.GetPrimaryMonitor().GetVideoMode()
+			window.SetPos((vidMode.Width - frameWidth) / 2, (vidMode.Height - frameHeight) / 2)
 		}
+
+		render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
+	})
+
+	window.SetCursorPosCallback(func(window *glfw.Window, xPos, yPos float64) {
+		width, height := window.GetSize()
+		deltaX = mouseX - float32(width) / 2
+		deltaY = mouseY - float32(height) / 2
+		mouseX = float32(xPos)
+		mouseY = float32(yPos)
 	})
 
 	//TODO load resources here
 	cubeModel := render.NewModel("models/cube.obj")
-	width, height := window.GetSize()
+	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
-	render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
-	gl.Viewport(0, 0, int32(width), int32(height))
-	render.LoadProjectionMatrix(&render.DefaultShaderProgram, render.MainCamera)
+	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
 	render.DefaultShaderProgram.SetAttribLocation(0, "position")
 	render.DefaultShaderProgram.SetAttribLocation(1, "textureCoords")
 	render.DefaultShaderProgram.SetAttribLocation(2, "normal")
 	transformationMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("transformationMatrix")
 	viewMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("viewMatrix")
-	lightPositionUniform := render.DefaultShaderProgram.CreateUniformLocation("lightPosition")
-	lightColorUniform := render.DefaultShaderProgram.CreateUniformLocation("lightColor")
-	environmentColorUniform := render.DefaultShaderProgram.CreateUniformLocation("environmentColor")
 
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-
 	cubeVAO := render.VertexArrayObject{BufferCount:3}
 	render.LoadVAO(&cubeVAO)
 	cubeVAO.Bind()
@@ -103,16 +115,20 @@ func main() {
 
 			// Do OpenGL stuff.
 			render.DefaultShaderProgram.UseShader()
-			gl.Uniform3f(environmentColorUniform, 0.078, 0.078, 0.078)
-			gl.Uniform3f(lightPositionUniform, 0, 10, 0)
-			gl.Uniform3f(lightColorUniform, 0.69, 0.90, 1)
 			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
 			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
 			cubeVAO.Bind()
 
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_2D, texture)
-			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, mgl32.AnglesToQuat(0, float32(angle), 0, mgl32.XYZ), 1)
+
+			rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
+			if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
+				rotation.V[0] += deltaY / 16
+				rotation.V[1] += deltaX / 16
+			}
+
+			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
 			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
 			gl.DrawElements(gl.TRIANGLES, int32(len(cubeModel.VecIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeModel.GetIndicesAsIntArr()))
 

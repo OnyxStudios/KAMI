@@ -50,12 +50,12 @@ func NewModel(file string) Model {
 
 		// INDICES.
 		case "f":
-			norm := make([]float32, 3)
-			vec := make([]float32, 3)
-			uv := make([]float32, 3)
-			matches, _ := fmt.Fscanf(objReader, "%f/%f/%f %f/%f/%f %f/%f/%f\n", &vec[0], &uv[0], &norm[0], &vec[1], &uv[1], &norm[1], &vec[2], &uv[2], &norm[2])
+			norm := make([]float32, 4)
+			vec := make([]float32, 4)
+			uv := make([]float32, 4)
+			matches, _ := fmt.Fscanf(objReader, "%f/%f/%f %f/%f/%f %f/%f/%f %f/%f/%f\n", &vec[0], &uv[0], &norm[0], &vec[1], &uv[1], &norm[1], &vec[2], &uv[2], &norm[2], &vec[3], &uv[3], &norm[3])
 
-			if matches != 9 {
+			if matches < 9 {
 				panic("Cannot read OBJ file")
 			}
 
@@ -70,6 +70,12 @@ func NewModel(file string) Model {
 			model.UvIndices = append(model.UvIndices, uv[0])
 			model.UvIndices = append(model.UvIndices, uv[1])
 			model.UvIndices = append(model.UvIndices, uv[2])
+
+			if matches >= 12 {
+				model.VecIndices = append(model.VecIndices, vec[0] - 1)
+				model.VecIndices = append(model.VecIndices, vec[2] - 1)
+				model.VecIndices = append(model.VecIndices, vec[3] - 1)
+			}
 		}
 	}
 

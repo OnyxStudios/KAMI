@@ -1,6 +1,7 @@
 package render
 
 import (
+	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -12,4 +13,10 @@ type Camera struct {
 	Position mgl32.Vec3
 	Rotation mgl32.Quat
 	Projection mgl32.Mat4
+}
+
+func (camera Camera) UpdateProjectionMatrix(fov, width, height, nearPlane, farPlane float32) {
+	camera.Projection =  mgl32.Perspective(mgl32.DegToRad(fov), width/height, nearPlane, farPlane)
+	LoadProjectionMatrix(&DefaultShaderProgram, camera)
+	gl.Viewport(0, 0, int32(width), int32(height))
 }
