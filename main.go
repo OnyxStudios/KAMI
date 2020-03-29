@@ -140,6 +140,7 @@ func main() {
 	lastTime := glfw.GetTime()
 	angle := 0.0
 	texture := test.LoadTexture("textures/planks.png")
+	gl.Enable(gl.DEPTH_TEST)
 	for !window.ShouldClose() {
 		render.CheckGlError()
 		time := glfw.GetTime()
