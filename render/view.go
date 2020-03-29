@@ -1,6 +1,9 @@
 package render
 
-import "github.com/go-gl/mathgl/mgl32"
+import (
+	"github.com/go-gl/gl/all-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
+)
 
 func CreateTransformMatrix(translation mgl32.Vec3, rotation mgl32.Quat, scale float32) mgl32.Mat4 {
 	matrix := mgl32.Ident4()
@@ -20,4 +23,13 @@ func CreateViewMatrix(position mgl32.Vec3, rotation mgl32.Quat) mgl32.Mat4 {
 	matrix = matrix.Mul4(mgl32.Translate3D(-position.X(), -position.Y(), -position.Z()))
 
 	return matrix
+}
+
+func LoadProjectionMatrix(shader *ShaderProgram, camera Camera) {
+	shader.UseShader()
+	matrixID := shader.CreateUniformLocation("projectionMatrix")
+	gl.UniformMatrix4fv(matrixID, 1, false, &camera.Projection[0])
+	CheckGlError()
+	//cleanup
+	gl.UseProgram(0)
 }

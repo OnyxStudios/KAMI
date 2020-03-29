@@ -7,64 +7,9 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"kami/constants"
 	"kami/render"
-	"kami/test"
 	"kami/util"
 	"runtime"
 )
-
-var cubeVertices = []float32{
-	1, 1, -1,
-	1, -1, -1,
-	1, 1, 1,
-	1, -1, 1,
-	-1, 1, -1,
-	-1, -1, -1,
-	-1, 1, 1,
-	-1, -1, 1,
-}
-
-var cubeTextureCoords = []float32{
-	0, 1,
-	1, 0,
-	1, 1,
-	1, 1,
-	0, 0,
-	1, 0,
-	0, 1,
-	1, 0,
-	1, 1,
-	0, 1,
-	0, 0,
-	1, 0,
-	0, 0,
-	0, 0,
-	1, 1,
-	0, 1,
-}
-
-var cubeNormals = []float32{
-	0, 1, 0,
-	0, 0, 1,
-	-1, 0, 0,
-	0, -1, 0,
-	1, 0, 0,
-	0, 0, -1,
-}
-
-var cubeIndices = []uint32{
-	4, 2, 0,
-	2, 7, 3,
-	6, 5, 7,
-	1, 7, 5,
-	0, 3, 1,
-	4, 1, 5,
-	4, 6, 2,
-	2, 6, 7,
-	6, 4, 5,
-	1, 3, 7,
-	0, 2, 3,
-	4, 0, 1,
-}
 
 func init() {
 	// This is needed to arrange that main() runs on main thread.
@@ -104,7 +49,7 @@ func main() {
 		screenWidth, screenHeight := glfw.GetPrimaryMonitor().GetPhysicalSize()
 
 		render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
-		test.LoadProjectionMatrix(&render.DefaultShaderProgram)
+		render.LoadProjectionMatrix(&render.DefaultShaderProgram, render.MainCamera)
 		gl.Viewport(0, 0, int32(width), int32(height))
 
 		if !iconified {
@@ -113,11 +58,12 @@ func main() {
 	})
 
 	//TODO load resources here
+	cubeModel := render.NewModel("models/cube.obj")
 	width, height := window.GetSize()
 	render.LoadShaders()
 	render.MainCamera.Projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(width/height), 0.1, 1000)
 	gl.Viewport(0, 0, int32(width), int32(height))
-	test.LoadProjectionMatrix(&render.DefaultShaderProgram)
+	render.LoadProjectionMatrix(&render.DefaultShaderProgram, render.MainCamera)
 	render.DefaultShaderProgram.SetAttribLocation(0, "position")
 	render.DefaultShaderProgram.SetAttribLocation(1, "textureCoords")
 	render.DefaultShaderProgram.SetAttribLocation(2, "normal")
@@ -132,14 +78,14 @@ func main() {
 	cubeVAO := render.VertexArrayObject{BufferCount:3}
 	render.LoadVAO(&cubeVAO)
 	cubeVAO.Bind()
-	cubeVAO.AddAttribData(0, 3, cubeVertices, 0, 0)
-	cubeVAO.AddAttribData(1, 2, cubeTextureCoords, 0, 0)
-	cubeVAO.AddAttribData(2, 3, cubeNormals, 0, 0)
+	cubeVAO.AddAttribData(0, 3, cubeModel.GetVertices(), 0, 0)
+	cubeVAO.AddAttribData(1, 2, cubeModel.GetTextureCoords(), 0, 0)
+	cubeVAO.AddAttribData(2, 3, cubeModel.GetNormals(), 0, 0)
 	gl.BindVertexArray(0)
 
 	lastTime := glfw.GetTime()
 	angle := 0.0
-	texture := test.LoadTexture("textures/planks.png")
+	texture := util.LoadTexture("textures/planks.png")
 	gl.Enable(gl.DEPTH_TEST)
 	for !window.ShouldClose() {
 		render.CheckGlError()
@@ -168,7 +114,7 @@ func main() {
 			gl.BindTexture(gl.TEXTURE_2D, texture)
 			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, mgl32.AnglesToQuat(0, float32(angle), 0, mgl32.XYZ), 1)
 			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
-			gl.DrawElements(gl.TRIANGLES, int32(len(cubeIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeIndices))
+			gl.DrawElements(gl.TRIANGLES, int32(len(cubeModel.VecIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeModel.GetIndicesAsIntArr()))
 
 			window.SwapBuffers()
 		}

@@ -1,4 +1,4 @@
-package test
+package util
 
 import (
 	"bytes"
@@ -6,23 +6,13 @@ import (
 	"image"
 	"image/draw"
 	"image/png"
-	"kami/render"
-	"kami/util"
 )
 
-//TODO move to designated file
-func BindIndices(size int, data []int32) {
-	var vbo uint32
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size, gl.Ptr(data), gl.STATIC_DRAW)
-}
-
-//TODO move to designated file
 func LoadTexture(fileName string) uint32 {
-	data := util.ReadAsset(fileName)
+	data := ReadAsset(fileName)
 	img, err := png.Decode(bytes.NewReader(data))
 	if err != nil {
-		util.CheckErr(err)
+		CheckErr(err)
 		return 0
 	}
 
@@ -43,14 +33,4 @@ func LoadTexture(fileName string) uint32 {
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Size().X), int32(rgba.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
 
 	return texture
-}
-
-//TODO move to designated file
-func LoadProjectionMatrix(shader *render.ShaderProgram) {
-	shader.UseShader()
-	matrixID := shader.CreateUniformLocation("projectionMatrix")
-	gl.UniformMatrix4fv(matrixID, 1, false, &render.MainCamera.Projection[0])
-	render.CheckGlError()
-	//cleanup
-	gl.UseProgram(0)
 }
