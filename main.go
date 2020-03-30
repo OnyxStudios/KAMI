@@ -7,6 +7,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"kami/constants"
 	"kami/render"
+	"kami/render/models"
 	"kami/util"
 	"runtime"
 )
@@ -76,7 +77,7 @@ func main() {
 	})
 
 	//TODO load resources here
-	cubeModel := render.NewModel("models/cube.obj")
+	cubeModel := models.CreateModel("models/glass.json")//models.NewModel("models/cube.obj")
 	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
 	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
@@ -87,18 +88,12 @@ func main() {
 	viewMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("viewMatrix")
 
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-	cubeVAO := render.VertexArrayObject{BufferCount:3}
-	render.LoadVAO(&cubeVAO)
-	cubeVAO.Bind()
-	cubeVAO.AddAttribData(0, 3, cubeModel.GetVertices(), 0, 0)
-	cubeVAO.AddAttribData(1, 2, cubeModel.GetTextureCoords(), 0, 0)
-	cubeVAO.AddAttribData(2, 3, cubeModel.GetNormals(), 0, 0)
-	gl.BindVertexArray(0)
 
 	lastTime := glfw.GetTime()
 	angle := 0.0
 	texture := util.LoadTexture("textures/planks.png")
 	gl.Enable(gl.DEPTH_TEST)
+
 	for !window.ShouldClose() {
 		render.CheckGlError()
 		time := glfw.GetTime()
@@ -117,20 +112,23 @@ func main() {
 			render.DefaultShaderProgram.UseShader()
 			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
 			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
-			cubeVAO.Bind()
 
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, texture)
+			for _, element := range cubeModel.Models {
+				element.Vao.Bind()
+				gl.ActiveTexture(gl.TEXTURE0)
+				gl.BindTexture(gl.TEXTURE_2D, texture)
 
-			rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
-			if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
-				rotation.V[0] += deltaY / 16
-				rotation.V[1] += deltaX / 16
+				rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
+				if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
+					rotation.V[0] += deltaY / 16
+					rotation.V[1] += deltaX / 16
+				}
+
+				transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
+				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
+				gl.DrawElements(gl.TRIANGLES, int32(len(element.Indices)), gl.UNSIGNED_INT, gl.Ptr(element.Indices))
+				gl.BindVertexArray(0)
 			}
-
-			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
-			gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
-			gl.DrawElements(gl.TRIANGLES, int32(len(cubeModel.VecIndices)), gl.UNSIGNED_INT, gl.Ptr(cubeModel.GetIndicesAsIntArr()))
 
 			window.SwapBuffers()
 		}
