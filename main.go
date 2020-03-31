@@ -7,7 +7,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"kami/constants"
 	"kami/render"
-	"kami/render/models"
+	"kami/render/models/obj"
 	"kami/util"
 	"runtime"
 )
@@ -77,7 +77,7 @@ func main() {
 	})
 
 	//TODO load resources here
-	cubeModel := models.CreateModel("models/glass.json")//models.NewModel("models/cube.obj")
+	cubeModel := obj.LoadModel("models/triangulated_cube.obj")
 	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
 	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
@@ -91,7 +91,7 @@ func main() {
 
 	lastTime := glfw.GetTime()
 	angle := 0.0
-	texture := util.LoadTexture("textures/planks.png")
+	texture := util.LoadTexture("textures/test.png")
 	gl.Enable(gl.DEPTH_TEST)
 
 	for !window.ShouldClose() {
@@ -113,23 +113,20 @@ func main() {
 			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
 			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
 
-			for _, element := range cubeModel.Models {
+			gl.ActiveTexture(gl.TEXTURE0)
+			gl.BindTexture(gl.TEXTURE_2D, texture)
+			rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
+			if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
+				rotation.V[0] += deltaY / 16
+				rotation.V[1] += deltaX / 16
+			}
+			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
+
+			for _, element := range cubeModel.Parts {
 				element.Vao.Bind()
-				gl.ActiveTexture(gl.TEXTURE0)
-				gl.BindTexture(gl.TEXTURE_2D, texture)
-
-				rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
-				if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
-					rotation.V[0] += deltaY / 16
-					rotation.V[1] += deltaX / 16
-				}
-
-				transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
 				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
 				gl.DrawElements(gl.TRIANGLES, int32(len(element.Indices)), gl.UNSIGNED_INT, gl.Ptr(element.Indices))
-				gl.BindVertexArray(0)
 			}
-
 			window.SwapBuffers()
 		}
 		glfw.PollEvents()

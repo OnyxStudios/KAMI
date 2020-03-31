@@ -1,14 +1,11 @@
-package models
+package json
 
 import (
 	"encoding/json"
 	"github.com/go-gl/mathgl/mgl32"
+	"kami/render/models"
 	"kami/util"
 )
-
-type JsonModel struct {
-	Models[] Model
-}
 
 type JsonFormat struct {
 	Parent string `json:"parent"`
@@ -31,7 +28,7 @@ type Face struct {
 	Uv []float32 `json:"uv"`
 }
 
-func CreateModel(path string) JsonModel {
+func LoadModel(path string) models.Model {
 	modelString, _ := util.CheckReadFile(path)
 
 	if len(modelString) <= 0 {
@@ -42,10 +39,10 @@ func CreateModel(path string) JsonModel {
 	json.Unmarshal([]byte(modelString), &jsonFormat)
 
 	GenerateModelData(&jsonFormat)
-	var models []Model
+	model := models.Model{}
 
 	for _, element := range jsonFormat.Elements {
-		model := Model{
+		part := models.ModelPart{
 			Name:          element.Name,
 			Vertices:      element.Vertices,
 			TextureCoords: element.TextureCoords,
@@ -53,11 +50,11 @@ func CreateModel(path string) JsonModel {
 			Indices:       element.Indices,
 		}
 
-		model.GenerateModelVAO()
-		models = append(models, model)
+		part.GenerateModelVAO()
+		model.Parts = append(model.Parts, part)
 	}
 
-	return JsonModel{Models:models}
+	return model
 }
 
 func GenerateModelData(model *JsonFormat) {
@@ -66,7 +63,7 @@ func GenerateModelData(model *JsonFormat) {
 	var normals []float32
 	var indices []uint32
 
-	for _, element := range model.Elements  {
+	for index, element := range model.Elements  {
 		startVertex := mgl32.Vec3{element.From[0], element.From[1], element.From[2]}
 		endVertex := mgl32.Vec3{element.To[0], element.To[1], element.To[2]}
 
@@ -83,10 +80,14 @@ func GenerateModelData(model *JsonFormat) {
 			textureCoords = append(textureCoords, face.Uv...)
 		}
 
-		element.Vertices = vertices
-		element.TextureCoords = textureCoords
-		element.Normals = normals
-		element.Indices = indices
+		model.Elements[index].Vertices = vertices
+		model.Elements[index].TextureCoords = textureCoords
+		model.Elements[index].Normals = normals
+		model.Elements[index].Indices = indices
+		vertices = []float32{}
+		textureCoords = []float32{}
+		normals = []float32{}
+		indices = []uint32{}
 	}
 }
 
