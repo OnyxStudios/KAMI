@@ -76,7 +76,7 @@ func main() {
 	})
 
 	//TODO load resources here
-	cubeModel := obj.LoadModel("models/triangulated_cube.obj")
+	cubeModel := obj.LoadModel("models/cube.obj")
 	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
 	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
@@ -89,7 +89,7 @@ func main() {
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
 	lastTime := glfw.GetTime()
-	texture := util.LoadTexture("textures/test.png")
+	texture := util.LoadTexture("textures/test2.png")
 	gl.Enable(gl.DEPTH_TEST)
 
 	for !window.ShouldClose() {
@@ -123,6 +123,7 @@ func main() {
 
 				element.Vao.Bind()
 				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
+
 				gl.DrawElements(gl.TRIANGLES, int32(len(element.Indices)), gl.UNSIGNED_INT, gl.Ptr(element.Indices))
 			}
 			window.SwapBuffers()
