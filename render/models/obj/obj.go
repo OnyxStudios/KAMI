@@ -55,29 +55,31 @@ func LoadModel(file string) models.Model {
 				panic("Cannot read OBJ file")
 			}
 
-			modelPart.Indices = append(modelPart.Indices, uint32(indices[0]-1))
-			modelPart.Indices = append(modelPart.Indices, uint32(indices[1]-1))
-			modelPart.Indices = append(modelPart.Indices, uint32(indices[2]-1))
+			modelPart.Indices = append(modelPart.Indices, uint32(indices[0]-1), uint32(indices[1]-1), uint32(indices[2]-1))
 
-			modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[0]) -1].X(), 1 - textureCoords[int(uv[0]) -1].Y())
-			modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[1]) -1].X(), 1 - textureCoords[int(uv[1]) -1].Y())
-			modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[2]) -1].X(), 1 - textureCoords[int(uv[2]) -1].Y())
+			modelPart.TextureCoords = append(modelPart.TextureCoords,
+				textureCoords[int(uv[0]) -1].X(), 1 - textureCoords[int(uv[0]) -1].Y(),
+				textureCoords[int(uv[1]) -1].X(), 1 - textureCoords[int(uv[1]) -1].Y(),
+				textureCoords[int(uv[2]) -1].X(), 1 - textureCoords[int(uv[2]) -1].Y())
 
-			modelPart.Normals = append(modelPart.Normals, normals[int(norm[0]) - 1].X(), normals[int(norm[0]) - 1].Y(), normals[int(norm[0]) - 1].Z())
-			modelPart.Normals = append(modelPart.Normals, normals[int(norm[1]) - 1].X(), normals[int(norm[1]) - 1].Y(), normals[int(norm[1]) - 1].Z())
-			modelPart.Normals = append(modelPart.Normals, normals[int(norm[2]) - 1].X(), normals[int(norm[2]) - 1].Y(), normals[int(norm[2]) - 1].Z())
+			modelPart.Normals = append(modelPart.Normals,
+				normals[int(norm[0]) - 1].X(), normals[int(norm[0]) - 1].Y(), normals[int(norm[0]) - 1].Z(),
+				normals[int(norm[1]) - 1].X(), normals[int(norm[1]) - 1].Y(), normals[int(norm[1]) - 1].Z(),
+				normals[int(norm[2]) - 1].X(), normals[int(norm[2]) - 1].Y(), normals[int(norm[2]) - 1].Z())
 
 			//Triangulate if face is a Quad
 			if matches == 12 {
 				modelPart.Indices = append(modelPart.Indices, uint32(indices[0]-1), uint32(indices[2]-1), uint32(indices[3]-1))
 
-				modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[0]) -1].X(), 1 - textureCoords[int(uv[0]) -1].Y())
-				modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[2]) -1].X(), 1 - textureCoords[int(uv[2]) -1].Y())
-				modelPart.TextureCoords = append(modelPart.TextureCoords, textureCoords[int(uv[3]) -1].X(), 1 - textureCoords[int(uv[3]) -1].Y())
+				modelPart.TextureCoords = append(modelPart.TextureCoords,
+					textureCoords[int(uv[0]) -1].X(), 1 - textureCoords[int(uv[0]) -1].Y(),
+					textureCoords[int(uv[2]) -1].X(), 1 - textureCoords[int(uv[2]) -1].Y(),
+					textureCoords[int(uv[3]) -1].X(), 1 - textureCoords[int(uv[3]) -1].Y())
 
-				modelPart.Normals = append(modelPart.Normals, normals[int(norm[0]) - 1].X(), normals[int(norm[0]) - 1].Y(), normals[int(norm[0]) - 1].Z())
-				modelPart.Normals = append(modelPart.Normals, normals[int(norm[2]) - 1].X(), normals[int(norm[2]) - 1].Y(), normals[int(norm[2]) - 1].Z())
-				modelPart.Normals = append(modelPart.Normals, normals[int(norm[3]) - 1].X(), normals[int(norm[3]) - 1].Y(), normals[int(norm[3]) - 1].Z())
+				modelPart.Normals = append(modelPart.Normals,
+					normals[int(norm[0]) - 1].X(), normals[int(norm[0]) - 1].Y(), normals[int(norm[0]) - 1].Z(),
+					normals[int(norm[2]) - 1].X(), normals[int(norm[2]) - 1].Y(), normals[int(norm[2]) - 1].Z(),
+					normals[int(norm[3]) - 1].X(), normals[int(norm[3]) - 1].Y(), normals[int(norm[3]) - 1].Z())
 			}
 		}
 	}

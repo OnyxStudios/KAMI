@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 	"kami/constants"
 	"kami/render"
 	"kami/render/models/obj"
@@ -70,8 +69,8 @@ func main() {
 
 	window.SetCursorPosCallback(func(window *glfw.Window, xPos, yPos float64) {
 		width, height := window.GetSize()
-		deltaX = mouseX - float32(width) / 2
-		deltaY = mouseY - float32(height) / 2
+		deltaX = float32(width) / 2 - float32(xPos)
+		deltaY = float32(height) / 2 - float32(yPos)
 		mouseX = float32(xPos)
 		mouseY = float32(yPos)
 	})
@@ -90,16 +89,14 @@ func main() {
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
 	lastTime := glfw.GetTime()
-	angle := 0.0
 	texture := util.LoadTexture("textures/test.png")
 	gl.Enable(gl.DEPTH_TEST)
 
 	for !window.ShouldClose() {
 		render.CheckGlError()
 		time := glfw.GetTime()
-		elapsedTime := time - lastTime
+		elapsedTime := float32(time - lastTime)
 		lastTime = time
-		angle += elapsedTime
 
 		//TODO process keybinds
 		if window.GetAttrib(glfw.Focused) == glfw.True {
@@ -115,14 +112,15 @@ func main() {
 
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_2D, texture)
-			rotation := mgl32.AnglesToQuat(0, 0, 0, mgl32.XYZ)
-			if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
-				rotation.V[0] += deltaY / 16
-				rotation.V[1] += deltaX / 16
-			}
-			transformMatrix := render.CreateTransformMatrix(mgl32.Vec3{0, 0, -10}, rotation, 1)
 
-			for _, element := range cubeModel.Parts {
+			for index, element := range cubeModel.Parts {
+				if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
+					cubeModel.Parts[index].Rotation.V[0] += -deltaY * elapsedTime / 16
+					cubeModel.Parts[index].Rotation.V[1] += -deltaX * elapsedTime / 16
+				}
+				cubeModel.Parts[index].Position[2] = -10
+				transformMatrix := render.CreateTransformMatrix(element.Position, element.Rotation, 1)
+
 				element.Vao.Bind()
 				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
 				gl.DrawElements(gl.TRIANGLES, int32(len(element.Indices)), gl.UNSIGNED_INT, gl.Ptr(element.Indices))
