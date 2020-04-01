@@ -41,9 +41,13 @@ func LoadVAO(vao *VertexArrayObject) {
 func LoadProgram(program *ShaderProgram) {
 	InitGL()
 	hVSH := LoadShader(fmt.Sprintf("%v.vsh", program.Location), gl.VERTEX_SHADER)
+	hGSH := LoadShader(fmt.Sprintf("%v.gsh", program.Location), gl.GEOMETRY_SHADER)
 	hFSH := LoadShader(fmt.Sprintf("%v.fsh", program.Location), gl.FRAGMENT_SHADER)
 	program.Handle = gl.CreateProgram()
 	gl.AttachShader(program.Handle, hVSH)
+	if hGSH != 0 {
+		gl.AttachShader(program.Handle, hGSH)
+	}
 	gl.AttachShader(program.Handle, hFSH)
 	gl.LinkProgram(program.Handle)
 	var success int32
@@ -63,9 +67,12 @@ func LoadProgram(program *ShaderProgram) {
 
 func LoadShader(location string, xtype uint32) uint32 {
 	InitGL()
-	handle := gl.CreateShader(xtype)
+	if !util.AssetExists(location) {
+		return 0
+	}
 	shaderSrc, freeFn := gl.Strs(util.SReadAsset(location) + "\x00")
 	defer freeFn()
+	handle := gl.CreateShader(xtype)
 	gl.ShaderSource(handle, 1, shaderSrc, nil)
 	gl.CompileShader(handle)
 	var success int32

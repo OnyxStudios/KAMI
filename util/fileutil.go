@@ -10,6 +10,11 @@ func SReadAsset(path string) string {
 	return string(ReadAsset(path))
 }
 
+func AssetExists(path string) bool {
+	_, err := resources.AssetInfo(path)
+	return err == nil
+}
+
 func ReadAsset(path string) []byte {
 	data, err := resources.Asset(path)
 	FCheckErr(err, fmt.Sprintf("asset file %v does not exist!", path))

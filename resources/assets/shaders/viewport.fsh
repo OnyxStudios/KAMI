@@ -1,7 +1,9 @@
 #version 330 core
 
-in vec2 pass_textureCoords;
-in vec3 surfaceNormal;
+in VertexData {
+    vec2 textureCoords;
+    vec3 normal;
+} VertexIn;
 
 out vec4 FragColor;
 
@@ -9,7 +11,7 @@ uniform sampler2D textureSampler;
 
 void main()
 {
-    vec4 textureColor = texture(textureSampler, pass_textureCoords);
+    vec4 textureColor = texture(textureSampler, VertexIn.textureCoords);
     if(textureColor.a < 0.5) {
         discard;
     }
