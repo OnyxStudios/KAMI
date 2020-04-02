@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"kami/constants"
 	"kami/render"
-	"kami/render/models/obj"
+	"kami/render/models/json"
 	"kami/util"
 	"runtime"
 )
@@ -76,7 +76,7 @@ func main() {
 	})
 
 	//TODO load resources here
-	cubeModel := obj.LoadModel("models/cube.obj")
+	cubeModel := json.LoadModel("models/gravestone.json")//obj.LoadModel("models/cube.obj")
 	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
 	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
@@ -89,7 +89,7 @@ func main() {
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
 	lastTime := glfw.GetTime()
-	texture := util.LoadTexture("textures/test2.png")
+	texture := util.LoadTexture("textures/cobblestone.png")
 	gl.Enable(gl.DEPTH_TEST)
 
 	for !window.ShouldClose() {
@@ -115,11 +115,11 @@ func main() {
 
 			for index, element := range cubeModel.Parts {
 				if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
-					cubeModel.Parts[index].Rotation.V[0] += -deltaY * elapsedTime / 16
-					cubeModel.Parts[index].Rotation.V[1] += -deltaX * elapsedTime / 16
+					cubeModel.Parts[index].Rotation.V[0] += -deltaY * elapsedTime / 50
+					cubeModel.Parts[index].Rotation.V[1] += -deltaX * elapsedTime / 50
 				}
 				cubeModel.Parts[index].Position[2] = -10
-				transformMatrix := render.CreateTransformMatrix(element.Position, element.Rotation, 1)
+				transformMatrix := render.CreateTransformMatrix(element.Position, element.Rotation, 6)
 
 				element.Vao.Bind()
 				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])

@@ -26,6 +26,7 @@ type Element struct {
 type Face struct {
 	Texture string `json:"texture"`
 	Uv []float32 `json:"uv"`
+	Rotation float32 `json:"rotation"`
 }
 
 func LoadModel(path string) models.Model {
@@ -67,18 +68,14 @@ func GenerateModelData(model *JsonFormat) {
 		startVertex := mgl32.Vec3{element.From[0], element.From[1], element.From[2]}
 		endVertex := mgl32.Vec3{element.To[0], element.To[1], element.To[2]}
 
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{startVertex.X(), endVertex.Y(), endVertex.Z()}, &vertices, &normals, &indices)
-		GenerateFace(mgl32.Vec3{endVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, &vertices, &normals, &indices)
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{startVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["east"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{endVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["west"].Uv, &vertices, &normals, &indices, &textureCoords)
 
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), startVertex.Z()}, &vertices, &normals, &indices)
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), endVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, &vertices, &normals, &indices)
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), startVertex.Z()}, element.Faces["south"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), endVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["north"].Uv, &vertices, &normals, &indices, &textureCoords)
 
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), startVertex.Y(), endVertex.Z()}, &vertices, &normals, &indices)
-		GenerateFace(mgl32.Vec3{startVertex.X(), endVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, &vertices, &normals, &indices)
-
-		for _, face := range element.Faces {
-			textureCoords = append(textureCoords, face.Uv...)
-		}
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), startVertex.Y(), endVertex.Z()}, element.Faces["down"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{startVertex.X(), endVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["up"].Uv, &vertices, &normals, &indices, &textureCoords)
 
 		model.Elements[index].Vertices = vertices
 		model.Elements[index].TextureCoords = textureCoords
@@ -91,10 +88,11 @@ func GenerateModelData(model *JsonFormat) {
 	}
 }
 
-func GenerateFace(startPoint, endPoint mgl32.Vec3, vertices, normals *[]float32, indices *[]uint32) {
+func GenerateFace(from, to mgl32.Vec3, uv []float32, vertices, normals *[]float32, indices *[]uint32, textureCoords *[]float32) {
+	startPoint := from.Mul(0.0625).Sub(mgl32.Vec3{0.5, 0.5, 0.5})
+	endPoint := to.Mul(0.0625).Sub(mgl32.Vec3{0.5, 0.5, 0.5})
 	var faceVerts []float32
 	var faceNormals []float32
-	var faceIndices []uint32
 
 	//Triangle 1
 	faceVerts = append(faceVerts, startPoint.X())
@@ -151,11 +149,12 @@ func GenerateFace(startPoint, endPoint mgl32.Vec3, vertices, normals *[]float32,
 	*vertices = append(*vertices, faceVerts...)
 	*normals = append(*normals, faceNormals...)
 
+	*textureCoords = append(*textureCoords, uv[0] / 16, uv[1] / 16, uv[2] / 16, uv[3] / 16, uv[2] / 16, uv[1] / 16)
+	*textureCoords = append(*textureCoords, uv[0] / 16, uv[1] / 16, uv[2] / 16, uv[3] / 16, uv[0] / 16, uv[3] / 16)
+
 	if len(*vertices) >= 18 {
-		for i := 18; i > 0; i-- {
-			faceIndices = append(faceIndices, uint32(len(*vertices)-i))
+		for i := 0; i < 18; i++ {
+			*indices = append(*indices, uint32(len(*indices)))
 		}
 	}
-
-	*indices = append(*indices, faceIndices...)
 }
