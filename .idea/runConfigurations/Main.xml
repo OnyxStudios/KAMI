@@ -1,7 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Main" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="KAMI" />
-    <working_directory value="$PROJECT_DIR$/" />
+    <working_directory value="$PROJECT_DIR$/run" />
+    <envs>
+      <env name="kami.debug" value="true" />
+    </envs>
     <kind value="FILE" />
     <filePath value="$PROJECT_DIR$/main.go" />
     <directory value="$PROJECT_DIR$/" />
