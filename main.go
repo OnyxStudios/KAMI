@@ -6,8 +6,10 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"kami/constants"
 	"kami/render"
-	"kami/render/models/json"
+	"kami/render/text"
 	"kami/util"
+	"kami/window/editor"
+	"kami/window/mouse"
 	"runtime"
 )
 
@@ -18,11 +20,9 @@ func init() {
 }
 
 var (
-	fov float32 = 45.0
-	nearPlane float32 = 0.1
-	farPlane float32 = 1000
-	mouseX, mouseY float32
-	deltaX, deltaY float32
+	fov            float32 = 45.0
+	nearPlane      float32 = 0.1
+	farPlane       float32 = 1000
 )
 
 func main() {
@@ -47,51 +47,50 @@ func main() {
 	glfw.WindowHint(glfw.GreenBits, videoMode.GreenBits)
 	glfw.WindowHint(glfw.BlueBits, videoMode.BlueBits)
 	glfw.WindowHint(glfw.RefreshRate, videoMode.RefreshRate)
-	window, err := glfw.CreateWindow(constants.WindowWidth, constants.WindowHeight, fmt.Sprintf("%v %v", constants.Title, constants.Version), nil, nil)
+	window, err := glfw.CreateWindow(constants.Config.WindowWidth, constants.Config.WindowHeight, fmt.Sprintf("%v %v", constants.Config.Title, constants.Config.Version), nil, nil)
 	util.FCheckErr(err, "could not create OpenGL window: %v")
 	window.MakeContextCurrent() //create openGL context
 	glfw.SwapInterval(1)
 	render.InitGL()
-	window.SetSizeCallback(func(window *glfw.Window, width int, height int) {
-		frameWidth, frameHeight := window.GetFramebufferSize()
-		render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
-	})
+	sizeCallback := func(window *glfw.Window, width int, height int) {
+		fWidth := float32(width)
+		fHeight := float32(height)
+		render.MainCamera.UpdateProjectionMatrix(fov, fWidth, fHeight, nearPlane, farPlane)
+		text.SetWindowSize(fWidth, fHeight)
+	}
+	window.SetSizeCallback(sizeCallback)
 	window.SetMaximizeCallback(func(window *glfw.Window, iconified bool) {
 		frameWidth, frameHeight := window.GetFramebufferSize()
 
 		if !iconified {
 			vidMode := glfw.GetPrimaryMonitor().GetVideoMode()
-			window.SetPos((vidMode.Width - frameWidth) / 2, (vidMode.Height - frameHeight) / 2)
+			window.SetPos((vidMode.Width-frameWidth)/2, (vidMode.Height-frameHeight)/2)
 		}
-
-		render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
+		sizeCallback(window, frameWidth, frameHeight)
 	})
+	window.SetCursorPosCallback(mouse.GlfwCallback)
 
-	window.SetCursorPosCallback(func(window *glfw.Window, xPos, yPos float64) {
-		width, height := window.GetSize()
-		deltaX = float32(width) / 2 - float32(xPos)
-		deltaY = float32(height) / 2 - float32(yPos)
-		mouseX = float32(xPos)
-		mouseY = float32(yPos)
-	})
+	text.LoadFonts()
+	defer text.ReleaseFonts()
+	w, h := window.GetSize()
+	text.SetWindowSize(float32(w), float32(h))
 
 	//TODO load resources here
-	cubeModel := json.LoadModel("models/gravestone.json")//obj.LoadModel("models/cube.obj")
+
 	frameWidth, frameHeight := window.GetFramebufferSize()
 	render.LoadShaders()
 	render.MainCamera.UpdateProjectionMatrix(fov, float32(frameWidth), float32(frameHeight), nearPlane, farPlane)
-	render.DefaultShaderProgram.SetAttribLocation(0, "position")
-	render.DefaultShaderProgram.SetAttribLocation(1, "textureCoords")
-	render.DefaultShaderProgram.SetAttribLocation(2, "normal")
-	transformationMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("transformationMatrix")
-	viewMatrixUniform := render.DefaultShaderProgram.CreateUniformLocation("viewMatrix")
 
-	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
-	lastTime := glfw.GetTime()
-	texture := util.LoadTexture("textures/cobblestone.png")
+	//gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	gl.ClearColor(0.4, 0.4, 0.4, 0.0)
+
+
+	editor.DisplayWelcomeScreen()
+	editor.DisplayTestStage() //TODO debug
+
 	gl.Enable(gl.DEPTH_TEST)
-
+	lastTime := glfw.GetTime()
 	for !window.ShouldClose() {
 		render.CheckGlError()
 		time := glfw.GetTime()
@@ -105,27 +104,12 @@ func main() {
 				window.SetShouldClose(true)
 			}
 
+			editor.Render(window, elapsedTime)
+
+			//w, h := window.GetSize()
+
 			// Do OpenGL stuff.
-			render.DefaultShaderProgram.UseShader()
-			viewMatrix := render.CreateViewMatrix(render.MainCamera.Position, render.MainCamera.Rotation)
-			gl.UniformMatrix4fv(viewMatrixUniform, 1, false, &viewMatrix[0])
 
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, texture)
-
-			for index, element := range cubeModel.Parts {
-				if window.GetMouseButton(glfw.MouseButtonLeft) == glfw.Press {
-					cubeModel.Parts[index].Rotation.V[0] += -deltaY * elapsedTime / 50
-					cubeModel.Parts[index].Rotation.V[1] += -deltaX * elapsedTime / 50
-				}
-				cubeModel.Parts[index].Position[2] = -10
-				transformMatrix := render.CreateTransformMatrix(element.Position, element.Rotation, 6)
-
-				element.Vao.Bind()
-				gl.UniformMatrix4fv(transformationMatrixUniform, 1, false, &transformMatrix[0])
-
-				gl.DrawElements(gl.TRIANGLES, int32(len(element.Indices)), gl.UNSIGNED_INT, gl.Ptr(element.Indices))
-			}
 			window.SwapBuffers()
 		}
 		glfw.PollEvents()

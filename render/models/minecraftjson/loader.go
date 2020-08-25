@@ -1,49 +1,27 @@
-package json
+package minecraftjson
 
 import (
 	"encoding/json"
 	"github.com/go-gl/mathgl/mgl32"
-	"kami/render/models"
+	"kami/render/models/kami"
 	"kami/util"
 )
 
-type JsonFormat struct {
-	Parent string `json:"parent"`
-	Textures map[string]string `json:"textures"`
-	Elements []Element `json:"elements"`
-}
-
-type Element struct {
-	Name string `json:"name"`
-	From []float32 `json:"from"`
-	To []float32 `json:"to"`
-	Faces map[string]Face `json:"faces"`
-
-	Vertices, TextureCoords, Normals []float32
-	Indices []uint32
-}
-
-type Face struct {
-	Texture string `json:"texture"`
-	Uv []float32 `json:"uv"`
-	Rotation float32 `json:"rotation"`
-}
-
-func LoadModel(path string) models.Model {
+func LoadModel(path string) kami.Model {
 	modelString, _ := util.CheckReadFile(path)
 
 	if len(modelString) <= 0 {
 		modelString = util.SReadAsset(path)
 	}
 
-	var jsonFormat JsonFormat
+	var jsonFormat Serialized
 	json.Unmarshal([]byte(modelString), &jsonFormat)
 
 	GenerateModelData(&jsonFormat)
-	model := models.Model{}
+	model := kami.Model{}
 
 	for _, element := range jsonFormat.Elements {
-		part := models.ModelPart{
+		part := kami.ModelPart{
 			Name:          element.Name,
 			Vertices:      element.Vertices,
 			TextureCoords: element.TextureCoords,
@@ -56,36 +34,6 @@ func LoadModel(path string) models.Model {
 	}
 
 	return model
-}
-
-func GenerateModelData(model *JsonFormat) {
-	var vertices []float32
-	var textureCoords []float32
-	var normals []float32
-	var indices []uint32
-
-	for index, element := range model.Elements  {
-		startVertex := mgl32.Vec3{element.From[0], element.From[1], element.From[2]}
-		endVertex := mgl32.Vec3{element.To[0], element.To[1], element.To[2]}
-
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{startVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["east"].Uv, &vertices, &normals, &indices, &textureCoords)
-		GenerateFace(mgl32.Vec3{endVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["west"].Uv, &vertices, &normals, &indices, &textureCoords)
-
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), startVertex.Z()}, element.Faces["south"].Uv, &vertices, &normals, &indices, &textureCoords)
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), endVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["north"].Uv, &vertices, &normals, &indices, &textureCoords)
-
-		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), startVertex.Y(), endVertex.Z()}, element.Faces["down"].Uv, &vertices, &normals, &indices, &textureCoords)
-		GenerateFace(mgl32.Vec3{startVertex.X(), endVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["up"].Uv, &vertices, &normals, &indices, &textureCoords)
-
-		model.Elements[index].Vertices = vertices
-		model.Elements[index].TextureCoords = textureCoords
-		model.Elements[index].Normals = normals
-		model.Elements[index].Indices = indices
-		vertices = []float32{}
-		textureCoords = []float32{}
-		normals = []float32{}
-		indices = []uint32{}
-	}
 }
 
 func GenerateFace(from, to mgl32.Vec3, uv []float32, vertices, normals *[]float32, indices *[]uint32, textureCoords *[]float32) {
@@ -156,5 +104,35 @@ func GenerateFace(from, to mgl32.Vec3, uv []float32, vertices, normals *[]float3
 		for i := 0; i < 18; i++ {
 			*indices = append(*indices, uint32(len(*indices)))
 		}
+	}
+}
+
+func GenerateModelData(model *Serialized) {
+	var vertices []float32
+	var textureCoords []float32
+	var normals []float32
+	var indices []uint32
+
+	for index, element := range model.Elements  {
+		startVertex := mgl32.Vec3{element.From[0], element.From[1], element.From[2]}
+		endVertex := mgl32.Vec3{element.To[0], element.To[1], element.To[2]}
+
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{startVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["east"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{endVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["west"].Uv, &vertices, &normals, &indices, &textureCoords)
+
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), startVertex.Z()}, element.Faces["south"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), endVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["north"].Uv, &vertices, &normals, &indices, &textureCoords)
+
+		GenerateFace(mgl32.Vec3{startVertex.X(), startVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), startVertex.Y(), endVertex.Z()}, element.Faces["down"].Uv, &vertices, &normals, &indices, &textureCoords)
+		GenerateFace(mgl32.Vec3{startVertex.X(), endVertex.Y(), startVertex.Z()}, mgl32.Vec3{endVertex.X(), endVertex.Y(), endVertex.Z()}, element.Faces["up"].Uv, &vertices, &normals, &indices, &textureCoords)
+
+		model.Elements[index].Vertices = vertices
+		model.Elements[index].TextureCoords = textureCoords
+		model.Elements[index].Normals = normals
+		model.Elements[index].Indices = indices
+		vertices = []float32{}
+		textureCoords = []float32{}
+		normals = []float32{}
+		indices = []uint32{}
 	}
 }

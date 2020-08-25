@@ -39,7 +39,6 @@ func LoadVAO(vao *VertexArrayObject) {
 }
 
 func LoadProgram(program *ShaderProgram) {
-	InitGL()
 	hVSH := LoadShader(fmt.Sprintf("%v.vsh", program.Location), gl.VERTEX_SHADER)
 	hGSH := LoadShader(fmt.Sprintf("%v.gsh", program.Location), gl.GEOMETRY_SHADER)
 	hFSH := LoadShader(fmt.Sprintf("%v.fsh", program.Location), gl.FRAGMENT_SHADER)

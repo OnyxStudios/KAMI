@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"io"
-	"kami/render/models"
+	"kami/render/models/kami"
 	"kami/util"
 )
 
-func LoadModel(file string) models.Model {
+func LoadModel(file string) kami.Model {
 	objData := util.ReadAsset(file)
 	objReader := bytes.NewReader(objData)
-	modelPart := models.ModelPart{}
+	modelPart := kami.ModelPart{}
 
 	var x, y, z float32
 	var vertexCoords []mgl32.Vec3
@@ -100,5 +100,5 @@ func LoadModel(file string) models.Model {
 	}
 
 	modelPart.GenerateModelVAO()
-	return models.Model{Parts: []models.ModelPart{modelPart}}
+	return kami.Model{Parts: []kami.ModelPart{modelPart}}
 }

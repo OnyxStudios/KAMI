@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	MainCamera = Camera{Position: mgl32.Vec3{0, 0, 0}, Rotation: mgl32.AnglesToQuat(0, 0 ,0, mgl32.XYZ)}
+	MainCamera = Camera{Position: mgl32.Vec3{0, 1, 25}, Rotation: mgl32.AnglesToQuat(0, 0 ,0, mgl32.XYZ)}
 )
 
 type Camera struct {
@@ -17,6 +17,6 @@ type Camera struct {
 
 func (camera Camera) UpdateProjectionMatrix(fov, width, height, nearPlane, farPlane float32) {
 	camera.Projection =  mgl32.Perspective(mgl32.DegToRad(fov), width/height, nearPlane, farPlane)
-	LoadProjectionMatrix(&DefaultShaderProgram, camera)
+	LoadProjectionMatrix(&DefaultShaderProgram.Shader, camera)
 	gl.Viewport(0, 0, int32(width), int32(height))
 }

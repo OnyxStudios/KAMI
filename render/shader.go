@@ -5,10 +5,23 @@ import (
 	"strings"
 )
 
-var DefaultShaderProgram = ShaderProgram{Location:"shaders/viewport"}
+var DefaultShaderProgram = DefaultShader{
+	Shader:          ShaderProgram{Location:"shaders/viewport"},
+}
 
 func LoadShaders() {
-	LoadProgram(&DefaultShaderProgram)
+	LoadProgram(&DefaultShaderProgram.Shader)
+	DefaultShaderProgram.Shader.SetAttribLocation(0, "position")
+	DefaultShaderProgram.Shader.SetAttribLocation(1, "textureCoords")
+	DefaultShaderProgram.Shader.SetAttribLocation(2, "normal")
+	DefaultShaderProgram.TransformMatrix = DefaultShaderProgram.Shader.CreateUniformLocation("transformationMatrix")
+	DefaultShaderProgram.ViewMatrix = DefaultShaderProgram.Shader.CreateUniformLocation("viewMatrix")
+}
+
+type DefaultShader struct {
+	Shader ShaderProgram
+	TransformMatrix int32
+	ViewMatrix int32
 }
 
 //a shader program that connects a vertex and fragment shader
