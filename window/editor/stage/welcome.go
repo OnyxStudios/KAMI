@@ -31,8 +31,7 @@ func (w Welcome) Load() {
 
 func (w Welcome) Draw(window *glfw.Window, delta float32) {
 	for index, txt := range txts {
-		txt.SetPosition(mgl32.Vec2{float32(50), float32(80 + index*50)})
-		txt.Draw()
+		text.Draw(float32(50), float32(80 + index*50), txt)
 	}
 }
 

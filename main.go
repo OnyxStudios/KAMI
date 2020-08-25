@@ -87,7 +87,7 @@ func main() {
 
 
 	editor.DisplayWelcomeScreen()
-	editor.DisplayTestStage() //TODO debug
+	//editor.DisplayTestStage() //TODO debug
 
 	gl.Enable(gl.DEPTH_TEST)
 	lastTime := glfw.GetTime()

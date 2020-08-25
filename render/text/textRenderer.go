@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/damien-lloyd/gltext"
+	"github.com/go-gl/mathgl/mgl32"
 	"golang.org/x/image/math/fixed"
 	"kami/render"
 	"kami/util"
@@ -22,7 +23,16 @@ var (
 func SetWindowSize(width, height float32) {
 	for _, font := range fonts {
 		font.ResizeWindow(width, height)
+		font.OrthographicMatrix = mgl32.Ortho2D(0.0, width, height, 0.0)
+		font.OrthographicMatrix = font.OrthographicMatrix.Mul4(mgl32.Scale3D(1.0, -1.0, 1.0))
 	}
+}
+
+// TODO make text renderer a struct
+// TODO store all possible chars as separate text, to not have to preallocate each string
+func Draw(x, y float32, text *gltext.Text) {
+	text.SetPosition(mgl32.Vec2{x, -y})
+	text.Draw()
 }
 
 func LoadFonts() {
